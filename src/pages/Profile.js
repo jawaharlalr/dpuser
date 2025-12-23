@@ -10,7 +10,7 @@ import {
   query, 
   where 
 } from 'firebase/firestore';
-import { Link, useNavigate, useLocation } from 'react-router-dom'; // Added useLocation
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   LogOut, 
@@ -30,45 +30,36 @@ import toast from 'react-hot-toast';
 const Profile = () => {
   const { user } = useAuth(); 
   const navigate = useNavigate();
-  const location = useLocation(); // Hook to catch navigation state
+  const location = useLocation(); 
   
-  // Local State
   const [profileData, setProfileData] = useState(null); 
   const [activeTab, setActiveTab] = useState('info'); 
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   
-  // Stats State
   const [stats, setStats] = useState({ orders: 0, expense: 0 }); 
 
-  // Forms
   const [formData, setFormData] = useState({ name: '', phone: '' });
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [newAddress, setNewAddress] = useState({
     type: 'Home', line1: '', city: '', state: '', zip: '', phone: ''
   });
 
-  // --- NEW: HANDLE DIRECT NAVIGATION FROM HOME ---
   useEffect(() => {
     if (location.state?.openAddressModal) {
-      setActiveTab('address');     // Switch to Address Tab
-      setShowAddressForm(true);    // Open the Form automatically
-      
-      // Optional: Clear state so it doesn't reopen on manual refresh
+      setActiveTab('address');
+      setShowAddressForm(true);
       window.history.replaceState({}, document.title);
     }
   }, [location]);
 
-  // --- 1. REAL-TIME PROFILE SYNC ---
   useEffect(() => {
     if (!user) return;
-
     const userRef = doc(db, 'users', user.uid);
     const unsubscribe = onSnapshot(userRef, (docSnap) => {
         if (docSnap.exists()) {
             const data = docSnap.data();
             setProfileData(data);
-            
             if (!isEditing) {
                 setFormData({
                     name: data.name || user.displayName || '',
@@ -77,20 +68,15 @@ const Profile = () => {
             }
         }
     });
-
     return () => unsubscribe();
   }, [user, isEditing]);
 
-  // --- 2. CALCULATE TOTAL ORDERS & SPENT ---
   useEffect(() => {
     if (!user) return;
-
     const q = query(collection(db, 'orders'), where('userId', '==', user.uid));
-
     const unsubscribe = onSnapshot(q, (snapshot) => {
         let totalCount = 0;
         let totalSpent = 0;
-
         snapshot.forEach((doc) => {
             const data = doc.data();
             totalCount++;
@@ -98,14 +84,11 @@ const Profile = () => {
                 totalSpent += Number(data.totalAmount) || 0;
             }
         });
-
         setStats({ orders: totalCount, expense: totalSpent });
     });
-
     return () => unsubscribe();
   }, [user]);
 
-  // --- 3. PHONE VALIDATION HELPER ---
   const handlePhoneChange = (e, setter, field = 'phone') => {
     const rawValue = e.target.value;
     const numericValue = rawValue.replace(/\D/g, '').slice(0, 10);
@@ -149,11 +132,12 @@ const Profile = () => {
 
   const handleAddAddress = async (e) => {
     e.preventDefault();
-    if (!newAddress.line1 || !newAddress.city || !newAddress.zip) {
-      return toast.error("Please fill required fields");
+    // UPDATED VALIDATION: Added newAddress.phone requirement
+    if (!newAddress.line1 || !newAddress.city || !newAddress.zip || !newAddress.phone) {
+      return toast.error("Please fill all required fields including phone");
     }
-    if (newAddress.phone && newAddress.phone.length !== 10) {
-        return toast.error("Address phone must be 10 digits");
+    if (newAddress.phone.length !== 10) {
+        return toast.error("Address phone must be exactly 10 digits");
     }
 
     setLoading(true);
@@ -162,12 +146,10 @@ const Profile = () => {
         id: Date.now().toString(),
         ...newAddress
       };
-
       const userRef = doc(db, 'users', user.uid);
       await updateDoc(userRef, {
         addresses: arrayUnion(addressObject)
       });
-
       toast.success("Address Added!");
       setShowAddressForm(false);
       setNewAddress({ type: 'Home', line1: '', city: '', state: '', zip: '', phone: '' }); 
@@ -193,14 +175,10 @@ const Profile = () => {
 
   return (
     <div className="flex flex-col items-center min-h-screen p-4 pt-20 pb-24 overflow-x-hidden font-sans bg-brand-dark">
-      
-      {/* Decorative Background */}
       <div className="fixed top-0 right-0 w-64 h-64 rounded-full bg-brand-orange/10 blur-3xl -z-10"></div>
       <div className="fixed bottom-0 left-0 w-64 h-64 rounded-full bg-brand-red/10 blur-3xl -z-10"></div>
 
       <div className="relative w-full max-w-2xl">
-        
-        {/* --- HEADER --- */}
         <div className="flex flex-col items-center gap-4 mb-8">
           <div className="flex items-center justify-center w-24 h-24 overflow-hidden border-4 rounded-full shadow-lg border-brand-orange shadow-brand-orange/20 bg-brand-surface">
              {user?.photoURL ? (
@@ -209,13 +187,11 @@ const Profile = () => {
                <span className="text-4xl font-bold text-brand-orange">{user?.email?.charAt(0).toUpperCase() || 'U'}</span>
              )}
           </div>
-          
           <div className="text-center">
             <h2 className="text-2xl italic font-black tracking-tighter text-transparent uppercase bg-clip-text bg-gradient-to-r from-brand-orange to-brand-yellow">
                 {profileData?.name || user?.displayName || 'Snack Lover'}
             </h2>
             <p className="mb-4 text-sm font-medium text-gray-400">{user?.email}</p>
-            
             <div className="flex justify-center gap-3">
               <Link to="/orders" className="flex items-center gap-2 px-5 py-2 text-[10px] font-black uppercase tracking-widest transition-all border rounded-full bg-brand-surface hover:bg-brand-red/20 border-brand-red/30">
                  <ClipboardList size={14} className="text-brand-orange"/> My Orders
@@ -227,7 +203,6 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* --- STATS DISPLAY --- */}
         <div className="grid grid-cols-2 gap-4 mb-8">
            <div className="flex flex-col items-center justify-center p-5 text-center border bg-brand-surface/50 backdrop-blur-md rounded-[24px] border-white/5">
               <div className="p-2.5 mb-2 rounded-full bg-brand-orange/10 text-brand-orange">
@@ -236,7 +211,6 @@ const Profile = () => {
               <p className="text-2xl font-black text-white">{stats.orders}</p>
               <p className="text-[9px] text-gray-500 uppercase font-black tracking-widest">Total Orders</p>
            </div>
-
            <div className="flex flex-col items-center justify-center p-5 text-center border bg-brand-surface/50 backdrop-blur-md rounded-[24px] border-white/5">
               <div className="p-2.5 mb-2 rounded-full bg-brand-yellow/10 text-brand-yellow">
                  <IndianRupee size={22} />
@@ -246,7 +220,6 @@ const Profile = () => {
            </div>
         </div>
 
-        {/* --- TABS --- */}
         <div className="flex mb-8 border-b border-white/5">
           {['info', 'address'].map((tab) => (
             <button 
@@ -262,7 +235,6 @@ const Profile = () => {
           ))}
         </div>
 
-        {/* --- CONTENT: INFO --- */}
         {activeTab === 'info' && (
           <div className="space-y-4 duration-500 animate-in fade-in slide-in-from-bottom-4">
              <div className="flex items-center justify-between mb-2">
@@ -273,7 +245,6 @@ const Profile = () => {
                   <Edit size={12}/> {isEditing ? 'Cancel' : 'Edit'}
                 </button>
              </div>
-
              <div className="space-y-5">
                 <div className="group">
                   <label className="block mb-1.5 text-[10px] font-black tracking-widest text-gray-500 uppercase">Full Name</label>
@@ -285,7 +256,6 @@ const Profile = () => {
                     className="w-full p-4 text-sm font-bold text-white transition-all border outline-none bg-brand-surface rounded-2xl border-white/5 focus:border-brand-orange/50 disabled:opacity-40"
                   />
                 </div>
-                
                 <div className="group">
                   <label className="block mb-1.5 text-[10px] font-black tracking-widest text-gray-500 uppercase">Email Address</label>
                   <input 
@@ -295,7 +265,6 @@ const Profile = () => {
                     className="w-full p-4 text-sm font-bold text-gray-500 border bg-brand-dark/50 rounded-2xl border-white/5 opacity-60"
                   />
                 </div>
-
                 <div className="group">
                   <label className="block mb-1.5 text-[10px] font-black tracking-widest text-gray-500 uppercase">Phone Number</label>
                   <input 
@@ -309,7 +278,6 @@ const Profile = () => {
                   />
                 </div>
              </div>
-
              {isEditing && (
                <button 
                  onClick={handleUpdateProfile}
@@ -319,17 +287,14 @@ const Profile = () => {
                  {loading ? 'Updating...' : 'Save Profile Changes'}
                </button>
              )}
-             
              <div className="flex items-center justify-center gap-2 mt-12 text-[10px] font-bold text-gray-600 uppercase tracking-widest">
                 <ShieldCheck size={14} className="text-green-500/50" /> Secure Account
              </div>
           </div>
         )}
 
-        {/* --- CONTENT: ADDRESSES --- */}
         {activeTab === 'address' && (
           <div className="space-y-4 duration-500 animate-in fade-in slide-in-from-bottom-4">
-            
             {profileData?.addresses && profileData.addresses.length > 0 ? (
                <div className="space-y-4">
                   {profileData.addresses.map((addr) => (
@@ -357,7 +322,6 @@ const Profile = () => {
                             <p className="mt-1 text-xs font-bold text-gray-500">{addr.city}, {addr.state} - {addr.zip}</p>
                          </div>
                       </div>
-
                       <button 
                         onClick={() => handleDeleteAddress(addr.id)}
                         className="absolute p-2.5 text-gray-600 transition-all bg-brand-dark rounded-xl top-4 right-4 hover:text-red-500 hover:scale-110 shadow-lg"
@@ -397,9 +361,11 @@ const Profile = () => {
                    </div>
                    <div className="grid grid-cols-2 gap-4">
                        <input placeholder="Pincode" type="number" className="p-4 text-sm font-bold text-white transition-all border outline-none rounded-2xl bg-brand-dark border-white/5 focus:border-brand-orange" value={newAddress.zip} onChange={e => setNewAddress({...newAddress, zip: e.target.value})} required />
+                       {/* UPDATED: Added required attribute */}
                        <input 
-                         placeholder="Phone" 
+                         placeholder="Phone (Required)" 
                          type="tel" 
+                         required
                          className="p-4 text-sm font-bold text-white transition-all border outline-none rounded-2xl bg-brand-dark border-white/5 focus:border-brand-orange" 
                          value={newAddress.phone} 
                          onChange={e => handlePhoneChange(e, setNewAddress, 'phone')} 
@@ -428,7 +394,6 @@ const Profile = () => {
             )}
           </div>
         )}
-
       </div>
     </div>
   );
