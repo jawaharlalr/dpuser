@@ -1,13 +1,103 @@
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+/* src/index.css */
+
+/* 1. Import Google Fonts (Poppins) */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap');
+
+/* 2. Tailwind Directives */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 3. Global Styles & Theme Variables */
+:root {
+  --brand-dark: #000000;
+  --brand-surface: #1a0505;
+  --brand-red: #8B0000;
+  --brand-orange: #FF4500;
+  --brand-yellow: #FFD700;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+/* GLOBAL RESET */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent; /* Mobile Touch Optimization */
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: 'Poppins', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  
+  /* Background remains pure black to ensure banners/cards pop */
+  background-color: #000000; 
+  color: #ffffff;
+  
+  /* Layout stability */
+  overflow-x: hidden; 
+  overscroll-behavior-y: contain; /* Better mobile scroll feel */
+}
+
+/* 4. Custom Utility: Hide Scrollbar but Keep Functionality */
+@layer utilities {
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+/* 5. Safe Area Support for iPhone Notch & Home Indicator */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
+
+/* 6. Fix for Banner/Category Images */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* 7. Input Autofill Styles for Dark Theme */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #1a0505 inset !important;
+  -webkit-text-fill-color: #ffffff !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* 8. Skeleton Pulse Animation */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #1a0505 25%, #2a0a0a 50%, #1a0505 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* 9. Layout Fix for Fixed Bottom Navigation */
+main {
+  min-height: 100vh;
+}
+
+/* 10. Horizontal Snap Container Fix */
+/* Ensures elements like banners don't shrink */
+.snap-x > * {
+  flex-shrink: 0;
 }
