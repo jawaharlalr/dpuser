@@ -1,23 +1,25 @@
-import { Outlet } from "react-router-dom";
-import BottomNav from "./BottomNav";
-import Header from "./Header"; // Import the new Header
+import React, { useMemo } from 'react';
+import { Outlet } from 'react-router-dom';
+import Header from './Header';
+import BottomNav from './BottomNav';
+import FallingEmojis from './FallingEmojis';
+import { getFestivalConfig } from '../utils/festivalLogic';
 
 export const Layout = () => {
+  // 1. Calculate festival config once when layout loads
+  const festivalConfig = useMemo(() => getFestivalConfig(), []);
+
   return (
     <div className="min-h-screen font-sans text-white bg-brand-dark">
-      
-      {/* Top Navigation */}
-      <Header />
+      {/* 2. Global Festival Animation Layer */}
+      {festivalConfig && <FallingEmojis config={festivalConfig} />}
 
-      {/* Main Content Area 
-          pt-20 adds top padding so content isn't hidden behind the fixed header 
-          pb-20 adds bottom padding for the nav bar 
-      */}
-      <div className="pt-20 pb-20">
-        <Outlet />
-      </div>
+      <Header />
       
-      {/* Bottom Navigation */}
+      <main className="pt-16 pb-24 md:pb-12">
+        <Outlet /> {/* This renders your pages (Home, Menu, etc.) */}
+      </main>
+
       <BottomNav />
     </div>
   );

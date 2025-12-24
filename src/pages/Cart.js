@@ -1,9 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
-import { db } from '../firebase';
-import { doc, getDoc } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Trash2, 
@@ -12,8 +10,6 @@ import {
   ArrowRight, 
   ShoppingBag,
   Flame,
-  Ticket,
-  CheckCircle2,
   XCircle 
 } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -23,43 +19,12 @@ const Cart = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const [discountPercent, setDiscountPercent] = useState(0);
-  const [appliedCode, setAppliedCode] = useState("");
-  const [dbOffers, setDbOffers] = useState([]);
-  const [loadingOffers, setLoadingOffers] = useState(true);
-
   // --- CALCULATIONS ---
   const totalQty = cart.reduce((acc, item) => acc + item.qty, 0);
-  const discountAmount = (total * discountPercent) / 100;
-  const finalPayable = total - discountAmount;
 
-  // --- HELPER: FORMAT CURRENCY (Standard Text Style) ---
+  // --- HELPER: FORMAT CURRENCY ---
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-IN').format(Math.round(amount));
-  };
-
-  useEffect(() => {
-    const fetchOffers = async () => {
-      try {
-        const settingsSnap = await getDoc(doc(db, "app_settings", "home_screen"));
-        if (settingsSnap.exists()) {
-          const data = settingsSnap.data();
-          setDbOffers(data.offers || []);
-        }
-      } catch (error) {
-        console.error("Error fetching offers:", error);
-      } finally {
-        setLoadingOffers(false);
-      }
-    };
-    fetchOffers();
-  }, []);
-
-  const applyOffer = (offer) => {
-    const percentage = parseInt(offer.discount) || 0; 
-    setDiscountPercent(percentage);
-    setAppliedCode(offer.title);
-    toast.success(`Offer "${offer.title}" applied!`);
   };
 
   const handleClearCart = () => {
@@ -76,14 +41,9 @@ const Cart = () => {
         return;
     }
     if (cart.length === 0) return;
-    navigate("/checkout", { 
-      state: { 
-        finalPayable: Math.round(finalPayable), 
-        discountAmount: Math.round(discountAmount), 
-        appliedCode,
-        totalQty
-      } 
-    });
+    
+    // Navigate without discount state as offers are removed
+    navigate("/checkout");
   };
 
   const handleRemove = (id) => {
@@ -170,25 +130,6 @@ const Cart = () => {
                 </motion.div>
               ))}
             </AnimatePresence>
-
-            {/* OFFERS */}
-            <div className="p-5 border bg-brand-surface rounded-2xl border-white/5">
-              <h3 className="flex items-center mb-4 text-xs font-normal tracking-widest text-gray-400 uppercase">
-                <Ticket className="w-4 h-4 mr-2 text-brand-orange" /> Available Coupons
-              </h3>
-              <div className="flex gap-3 pb-2 overflow-x-auto scrollbar-hide">
-                {!loadingOffers && dbOffers.map((offer, idx) => (
-                    <button key={idx} onClick={() => applyOffer(offer)} className={`flex-shrink-0 p-4 text-left border rounded-2xl transition-all w-44 ${appliedCode === offer.title ? 'border-brand-orange bg-brand-orange/5 shadow-lg shadow-brand-orange/5' : 'border-white/5 bg-brand-dark/40 hover:border-white/20'}`}>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-[10px] font-normal text-brand-orange uppercase tracking-widest">{offer.title}</span>
-                        {appliedCode === offer.title && <CheckCircle2 className="w-3 h-3 text-brand-orange" />}
-                      </div>
-                      <p className="text-[11px] font-normal text-white uppercase tracking-tight">{offer.discount}</p>
-                    </button>
-                  ))
-                }
-              </div>
-            </div>
           </div>
 
           {/* BILL DETAILS */}
@@ -202,13 +143,6 @@ const Cart = () => {
                       <span className="text-white">₹ {formatCurrency(total)}</span>
                     </div>
 
-                    {discountPercent > 0 && (
-                      <div className="flex justify-between font-normal text-green-500">
-                        <span className="flex items-center gap-1"><Ticket size={12}/> {appliedCode}</span>
-                        <span>- ₹ {formatCurrency(discountAmount)}</span>
-                      </div>
-                    )}
-
                     <div className="flex justify-between text-gray-500">
                       <span>Taxes & Delivery</span>
                       <span className="text-green-500 font-normal text-[10px] bg-green-500/10 px-2 py-0.5 rounded tracking-tighter">FREE</span>
@@ -218,14 +152,11 @@ const Cart = () => {
                   {/* FINAL PAYABLE BOX */}
                   <div className="p-5 mb-8 border bg-black/60 rounded-[24px] border-white/5">
                     <div className="flex items-center justify-between mb-2 tracking-widest uppercase">
-                        <span className="text-[10px] font-normal text-gray-600">Final Amount</span>
-                        {discountPercent > 0 && (
-                           <span className="text-[10px] text-gray-500 line-through decoration-red-500/50">₹ {formatCurrency(total)}</span>
-                        )}
+                        <span className="text-[10px] font-normal text-gray-600">Subtotal</span>
                     </div>
                     <div className="flex items-center text-3xl italic font-normal tracking-tighter uppercase text-brand-yellow">
                         <span className="mr-3 text-xl not-italic font-normal text-brand-yellow">₹</span>
-                        <span>{formatCurrency(finalPayable)}</span>
+                        <span>{formatCurrency(total)}</span>
                     </div>
                   </div>
 
@@ -233,7 +164,7 @@ const Cart = () => {
                     onClick={handleProceedToCheckout}
                     className="flex items-center justify-center w-full py-4 font-normal text-xs text-white uppercase tracking-[0.2em] transition-all shadow-xl bg-gradient-to-r from-brand-red to-brand-orange rounded-2xl hover:brightness-110 active:scale-95"
                   >
-                    Checkout <ArrowRight className="w-4 h-4 ml-2" />
+                    Proceed to Checkout <ArrowRight className="w-4 h-4 ml-2" />
                   </button>
                   
                   <p className="mt-6 text-[9px] text-center text-gray-600 uppercase font-normal tracking-[0.2em] opacity-50">

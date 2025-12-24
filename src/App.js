@@ -4,8 +4,9 @@ import { CartProvider } from "./context/CartContext";
 import { Toaster } from "react-hot-toast";
 import { Layout } from "./components/Layout";
 
-// Import the Gate component
+// Components
 import ShopStatusGate from "./components/ShopStatusGate";
+import ScrollToTop from "./components/ScrollToTop"; // Import the new component
 
 // Pages
 import Home from "./pages/Home";
@@ -15,7 +16,7 @@ import Login from "./pages/Login";
 import Profile from "./pages/Profile";
 import Checkout from "./pages/Checkout";
 import Orders from "./pages/Orders";
-import Help from "./pages/Help"; // Added Help Page
+import Help from "./pages/Help";
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -35,18 +36,21 @@ function App() {
     <AuthProvider>
       <CartProvider>
         <BrowserRouter>
+          {/* ScrollToTop listens to navigation changes and resets the view */}
+          <ScrollToTop /> 
+          
           <Toaster 
             position="top-center" 
             toastOptions={{ style: { background: '#2b0a0a', color: '#fff', border: '1px solid #333' } }} 
           />
-          {/* ShopStatusGate monitors onlineOrders status from Firestore globally */}
+          
           <ShopStatusGate> 
             <Routes>
               {/* Public Routes */}
               <Route path="/login" element={<Login />} />
-              <Route path="/help" element={<Help />} /> {/* Added Help Route */}
+              <Route path="/help" element={<Help />} />
 
-              {/* Protected Routes inside Main Layout (Header/BottomNav) */}
+              {/* Protected Routes inside Main Layout */}
               <Route element={<Layout />}>
                 <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
                 <Route path="/menu" element={<ProtectedRoute><Menu /></ProtectedRoute>} />

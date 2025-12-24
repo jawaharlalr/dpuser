@@ -13,12 +13,24 @@ const SearchBar = ({ isMobile, onClose }) => {
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
 
-  // --- HELPER: FORMAT CURRENCY ---
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-IN').format(Math.round(amount));
   };
 
-  // 1. Fetch products for instant search
+  // --- NEW HELPER: GET DISPLAY PRICE ---
+  const getDisplayPrice = (product) => {
+    // 1. If it has a top-level price, use it
+    if (product.price) return product.price;
+
+    // 2. If it has variants, find the lowest price
+    if (product.variants && product.variants.length > 0) {
+      const prices = product.variants.map(v => Number(v.price)).filter(p => !isNaN(p));
+      return prices.length > 0 ? Math.min(...prices) : 0;
+    }
+
+    return 0;
+  };
+
   useEffect(() => {
     const fetchProducts = async () => {
       try {
@@ -31,7 +43,6 @@ const SearchBar = ({ isMobile, onClose }) => {
     fetchProducts();
   }, []);
 
-  // 2. Filter logic (Checks name and category)
   useEffect(() => {
     if (query.trim().length > 1) {
       const filtered = products.filter(p =>
@@ -46,7 +57,6 @@ const SearchBar = ({ isMobile, onClose }) => {
     }
   }, [query, products]);
 
-  // 3. Highlight Matching Text
   const HighlightText = ({ text, highlight }) => {
     if (!highlight.trim()) return <span>{text}</span>;
     const parts = text.split(new RegExp(`(${highlight})`, 'gi'));
@@ -98,47 +108,50 @@ const SearchBar = ({ isMobile, onClose }) => {
             {results.length > 0 ? (
               <div className="p-2 space-y-1">
                 <p className="px-3 py-2 text-[10px] font-normal uppercase tracking-[0.2em] text-gray-500 border-b border-white/5 mb-2">Matching Products</p>
-                {results.map((product) => (
-                  <button
-                    key={product.id}
-                    onClick={() => handleResultClick(product.name)}
-                    className="w-full flex items-start gap-4 p-3 hover:bg-white/[0.05] rounded-xl transition-all group text-left"
-                  >
-                    {/* Product Image */}
-                    <div className="overflow-hidden border w-14 h-14 rounded-xl shrink-0 border-white/10 bg-brand-dark">
-                      <img src={product.imageUrl} alt="" className="object-cover w-full h-full transition-transform group-hover:scale-110" />
-                    </div>
+                {results.map((product) => {
+                  const displayPrice = getDisplayPrice(product);
+                  const hasVariants = product.variants && product.variants.length > 1;
 
-                    {/* Product Info */}
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-sm font-normal tracking-tight text-white uppercase truncate">
-                        <HighlightText text={product.name} highlight={query} />
-                      </h4>
-                      
-                      {/* --- NEW: CATEGORY TAG --- */}
-                      <p className="text-[9px] text-gray-500 uppercase tracking-[0.15em] flex items-center gap-1 mt-0.5">
-                        <Tag size={8} className="text-brand-orange/50" /> {product.category}
-                      </p>
-                      
-                      {/* Footer: Price & Stock */}
-                      <div className="flex items-center justify-between mt-2 font-normal">
-                        <span className="text-xs text-brand-orange">₹ {formatCurrency(product.price)}</span>
+                  return (
+                    <button
+                      key={product.id}
+                      onClick={() => handleResultClick(product.name)}
+                      className="w-full flex items-start gap-4 p-3 hover:bg-white/[0.05] rounded-xl transition-all group text-left"
+                    >
+                      <div className="overflow-hidden border w-14 h-14 rounded-xl shrink-0 border-white/10 bg-brand-dark">
+                        <img src={product.imageUrl} alt="" className="object-cover w-full h-full transition-transform group-hover:scale-110" />
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-sm font-normal tracking-tight text-white uppercase truncate">
+                          <HighlightText text={product.name} highlight={query} />
+                        </h4>
                         
-                        <div className="flex items-center gap-1">
-                          {product.inStock !== false ? (
-                            <span className="flex items-center gap-1 text-[9px] text-green-500 uppercase tracking-tighter">
-                              <CheckCircle2 size={10} /> In Stock
-                            </span>
-                          ) : (
-                            <span className="flex items-center gap-1 text-[9px] text-red-500 uppercase tracking-tighter">
-                              <AlertTriangle size={10} /> Out of Stock
-                            </span>
-                          )}
+                        <p className="text-[9px] text-gray-500 uppercase tracking-[0.15em] flex items-center gap-1 mt-0.5">
+                          <Tag size={8} className="text-brand-orange/50" /> {product.category}
+                        </p>
+                        
+                        <div className="flex items-center justify-between mt-2 font-normal">
+                          <span className="text-xs text-brand-orange">
+                            {hasVariants ? 'From ' : ''}₹ {formatCurrency(displayPrice)}
+                          </span>
+                          
+                          <div className="flex items-center gap-1">
+                            {product.inStock !== false ? (
+                              <span className="flex items-center gap-1 text-[9px] text-green-500 uppercase tracking-tighter">
+                                <CheckCircle2 size={10} /> In Stock
+                              </span>
+                            ) : (
+                              <span className="flex items-center gap-1 text-[9px] text-red-500 uppercase tracking-tighter">
+                                <AlertTriangle size={10} /> Out of Stock
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </button>
-                ))}
+                    </button>
+                  );
+                })}
               </div>
             ) : (
               <div className="flex flex-col items-center p-10 text-center">

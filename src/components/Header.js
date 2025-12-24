@@ -19,7 +19,23 @@ const Header = () => {
     return new Intl.NumberFormat('en-IN').format(Math.round(amount));
   };
 
-  // --- 1. Fetch Products once for local search ---
+  // --- NEW: Helper to get starting price ---
+  const getDisplayPrice = (product) => {
+    if (product.price) return { price: product.price, isStarting: false };
+    
+    if (product.variants && product.variants.length > 0) {
+      const prices = product.variants
+        .map(v => Number(v.price))
+        .filter(p => !isNaN(p));
+      return { 
+        price: prices.length > 0 ? Math.min(...prices) : 0, 
+        isStarting: product.variants.length > 1 
+      };
+    }
+    return { price: 0, isStarting: false };
+  };
+
+  // --- 1. Fetch Products once ---
   useEffect(() => {
     const fetchProducts = async () => {
       try {
@@ -33,7 +49,7 @@ const Header = () => {
     fetchProducts();
   }, []);
 
-  // --- 2. Filter Logic (Search by Name and Category) ---
+  // --- 2. Filter Logic ---
   useEffect(() => {
     if (searchValue.trim().length > 0) {
       const lowerQuery = searchValue.toLowerCase();
@@ -151,6 +167,7 @@ const Header = () => {
                     searchValue={searchValue} 
                     highlightHelper={HighlightText} 
                     formatCurrency={formatCurrency}
+                    priceHelper={getDisplayPrice}
                   />
                 </motion.div>
               )}
@@ -179,7 +196,7 @@ const Header = () => {
                     <Search className="absolute left-5 text-brand-orange" size={18} />
                     <button type="button" onClick={() => setIsSearchOpen(false)} className="absolute text-gray-500 right-5"><X size={18} /></button>
                   </form>
-                  {searchResults.length > 0 && (
+                  {searchValue.length > 0 && (
                     <div className="max-h-[60vh] overflow-y-auto pb-2">
                        <SearchDropdown 
                         results={searchResults} 
@@ -187,6 +204,7 @@ const Header = () => {
                         searchValue={searchValue} 
                         highlightHelper={HighlightText} 
                         formatCurrency={formatCurrency}
+                        priceHelper={getDisplayPrice}
                        />
                     </div>
                   )}
@@ -204,7 +222,7 @@ const Header = () => {
   );
 };
 
-const SearchDropdown = ({ results, onSelect, searchValue, highlightHelper: HighlightText, formatCurrency }) => {
+const SearchDropdown = ({ results, onSelect, searchValue, highlightHelper: HighlightText, formatCurrency, priceHelper }) => {
   if (results.length === 0) return (
     <div className="p-4 text-xs italic font-normal text-center text-gray-500">No snacks found for "{searchValue}"</div>
   );
@@ -212,40 +230,48 @@ const SearchDropdown = ({ results, onSelect, searchValue, highlightHelper: Highl
   return (
     <div className="p-2 space-y-1">
       <p className="px-3 py-2 text-[10px] font-normal uppercase tracking-widest text-gray-500 border-b border-white/5 mb-1">Matching Results</p>
-      {results.map((product) => (
-        <div 
-          key={product.id}
-          onClick={() => onSelect(product.name)}
-          className="flex items-start gap-3 p-3 transition-colors cursor-pointer hover:bg-white/5 rounded-xl group"
-        >
-          <div className="relative overflow-hidden border shrink-0 w-14 h-14 rounded-xl bg-brand-dark border-white/10">
-            <img src={product.imageUrl} alt="" className="object-cover w-full h-full transition-transform group-hover:scale-110" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <h4 className="text-sm font-normal tracking-tight text-white uppercase truncate">
-              <HighlightText text={product.name} highlight={searchValue} />
-            </h4>
-            
-            {/* Sub-details: Category tag */}
-            <p className="text-[9px] text-gray-500 uppercase tracking-widest flex items-center gap-1 mt-0.5">
-              <Tag size={8} className="text-brand-orange/50"/> {product.category}
-            </p>
+      {results.map((product) => {
+        const { price, isStarting } = priceHelper(product);
+        
+        return (
+          <div 
+            key={product.id}
+            onClick={() => onSelect(product.name)}
+            className="flex items-start gap-3 p-3 transition-colors cursor-pointer hover:bg-white/5 rounded-xl group"
+          >
+            <div className="relative overflow-hidden border shrink-0 w-14 h-14 rounded-xl bg-brand-dark border-white/10">
+              <img src={product.imageUrl} alt="" className="object-cover w-full h-full transition-transform group-hover:scale-110" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h4 className="text-sm font-normal tracking-tight text-left text-white uppercase truncate">
+                <HighlightText text={product.name} highlight={searchValue} />
+              </h4>
+              
+              <p className="text-[9px] text-gray-500 uppercase tracking-widest flex items-center gap-1 mt-0.5">
+                <Tag size={8} className="text-brand-orange/50"/> {product.category}
+              </p>
 
-            <div className="flex items-center justify-between mt-2 font-normal">
-                <span className="text-xs text-brand-orange">₹ {formatCurrency(product.price)}</span>
-                {product.inStock !== false ? (
-                    <span className="text-[9px] text-green-500 uppercase tracking-tighter flex items-center gap-1">
-                        <CheckCircle2 size={10} /> In Stock
-                    </span>
-                ) : (
-                    <span className="text-[9px] text-red-500 uppercase tracking-tighter flex items-center gap-1">
-                        <AlertTriangle size={10} /> Out of Stock
-                    </span>
-                )}
+              <div className="flex items-center justify-between mt-2 font-normal">
+                  <span className="text-xs text-brand-orange">
+                    {isStarting ? 'From ' : ''}₹ {formatCurrency(price)}
+                  </span>
+                  
+                  <div className="flex items-center gap-1">
+                    {product.inStock !== false ? (
+                        <span className="text-[9px] text-green-500 uppercase tracking-tighter flex items-center gap-1">
+                            <CheckCircle2 size={10} /> In Stock
+                        </span>
+                    ) : (
+                        <span className="text-[9px] text-red-500 uppercase tracking-tighter flex items-center gap-1">
+                            <AlertTriangle size={10} /> Out of Stock
+                        </span>
+                    )}
+                  </div>
+              </div>
             </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 };
