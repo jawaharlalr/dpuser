@@ -321,7 +321,7 @@ const Home = () => {
                 <div key={idx} className="flex-shrink-0 w-64 p-5 border bg-brand-surface rounded-[2rem] border-white/5 relative overflow-hidden group transition-all hover:border-brand-orange/30 shadow-xl">
                   <div className="absolute w-16 h-16 transition-colors rounded-full -right-4 -top-4 bg-brand-orange/10 blur-2xl group-hover:bg-brand-orange/20" />
                   <p className="text-[10px] font-black text-brand-orange uppercase tracking-widest mb-1">{offer.title}</p>
-                  <h4 className="text-2xl italic font-black tracking-tighter text-white uppercase">{offer.discount}</h4>
+                  <h4 className="text-2xl italic font-black tracking-tighter text-white uppercase">{offer.discount} %</h4>
                   <div className="flex items-center justify-between mt-3">
                     <span className="text-[9px] font-bold text-gray-500 uppercase">Min Order ₹{offer.minAmount}</span>
                     <button onClick={() => navigateWithScroll("/menu")} className="text-[9px] font-black text-white bg-brand-orange px-3 py-1 rounded-full uppercase shadow-lg">Order</button>

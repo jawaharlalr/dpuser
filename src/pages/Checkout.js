@@ -344,7 +344,7 @@ const Checkout = () => {
                         {isLocked && !isActive && <Lock size={14} className="text-gray-500" />}
                       </div>
                       <h4 className="text-[10px] font-medium text-gray-100 uppercase">{offer.title}</h4>
-                      <p className="mt-1 text-lg italic font-medium uppercase text-brand-yellow">{offer.discount}</p>
+                      <p className="mt-1 text-lg italic font-medium uppercase text-brand-yellow">{offer.discount}%</p>
                       <div className="pt-3 mt-4 border-t border-white/5">
                         <div className="flex justify-between text-[8px] uppercase text-gray-400 mb-1.5">
                           <span>Progress</span>

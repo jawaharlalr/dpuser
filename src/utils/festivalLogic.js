@@ -33,7 +33,7 @@ export const getFestivalConfig = () => {
   const isDateRange = (m, start, end) => month === m && date >= start && date <= end;
 
   // --- NEW YEAR ---
-  if ((month === 12 && date >= 26) || (month === 1 && date === 1))
+  if ((month === 12 && date >= 31) || (month === 1 && date === 2))
     return { 
       name: "New Year", emoji: "✨", userBadge: "🥳", 
       deadline: `${year + (month === 12 ? 1 : 0)}-01-01T23:59:59`,
@@ -53,22 +53,26 @@ export const getFestivalConfig = () => {
     };
 
   // --- REPUBLIC DAY ---
-  if (month === 1 && date === 26)
-    return { 
-      name: "Republic Day", emoji: "🇮🇳", userBadge: "🎖️", 
-      deadline: `${year}-01-26T23:59:59`,
-      msg: "Happy Republic Day!", sub: "Celebrating the spirit of India.", 
-      theme: "from-orange-600/20 via-white/5 to-green-600/20",
-      animation: "float", count: 20,
-      specialText: "PROUDLY INDIAN"
-    };
+if (month === 1 && date === 26)
+  return { 
+    name: "Republic Day", 
+    emoji: "\uD83C\uDDEE\uD83C\uDDF3", // Unicode for 🇮🇳
+    userBadge: "🎖️", 
+    deadline: `${year}-01-26T23:59:59`,
+    msg: "Happy Republic Day!", 
+    sub: "Celebrating the spirit of India.", 
+    theme: "from-[#FF9933]/20 via-white/10 to-[#138808]/20", // Actual Saffron and Green hex
+    animation: "float", 
+    count: 25,
+    specialText: "PROUDLY INDIAN"
+  };
 
   // --- VALENTINE'S WEEK ---
   if (isDateRange(2, 7, 14))
     return { 
-      name: "Valentine", emoji: "💖", userBadge: "💝", 
+      name: "Valentine", emoji: "💕💝", userBadge: "💌", 
       deadline: `${year}-02-14T23:59:59`,
-      msg: "Season of Love!", sub: "Share the sweetness with loved ones.", 
+      msg: "Season of Love! 💓", sub: "Share the sweetness with loved ones.", 
       theme: "from-pink-600/30 to-red-600/20",
       animation: "float", count: 20 
     };
