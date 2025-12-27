@@ -2,6 +2,9 @@
   "name": "dp-snacks-mobile",
   "version": "0.1.0",
   "private": true,
+  "config": {
+    "npm_config_legacy_peer_deps": "true"
+  },
   "dependencies": {
     "@capacitor/android": "^8.0.0",
     "@capacitor/cli": "^8.0.0",
@@ -16,13 +19,18 @@
     "lucide-react": "^0.562.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
-    "react-helmet": "^6.1.0",
     "react-helmet-async": "^2.0.5",
     "react-hot-toast": "^2.6.0",
     "react-router-dom": "^7.11.0",
     "react-scripts": "5.0.1",
     "tailwind-merge": "^3.4.0",
     "web-vitals": "^2.1.4"
+  },
+  "overrides": {
+    "react-helmet-async": {
+      "react": "$react",
+      "react-dom": "$react-dom"
+    }
   },
   "scripts": {
     "start": "react-scripts start",
