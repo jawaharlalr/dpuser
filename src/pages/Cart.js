@@ -13,7 +13,7 @@ import {
   ShoppingBag,
   Flame,
   XCircle
-} from 'lucide-react'; // Removed Info
+} from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const Cart = () => {
@@ -21,10 +21,9 @@ const Cart = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  // Removed loadingConfig as it was unused
   useEffect(() => {
     const unsub = onSnapshot(doc(db, "app_settings", "delivery_config"), (snap) => {
-      // Logic for delivery config if needed in future
+      // Delivery config logic
     });
     return () => unsub();
   }, []);
@@ -34,6 +33,9 @@ const Cart = () => {
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-IN').format(Math.round(amount));
   };
+
+  // Helper for the standard Rupee symbol style
+  const Rupee = () => <span style={{ fontFamily: 'sans-serif', marginRight: '1px' }}>₹</span>;
 
   const handleClearCart = () => {
     if(window.confirm("Clear your entire cart?")) {
@@ -121,8 +123,8 @@ const Cart = () => {
 
                       <div className="flex items-end justify-between mt-auto">
                           <div className="flex flex-col text-left">
-                             <span className="text-[9px] font-medium text-gray-500 uppercase">₹{formatCurrency(item.price)} / unit</span>
-                             <span className="text-lg font-bold text-brand-yellow">₹{formatCurrency(item.price * item.qty)}</span>
+                             <span className="text-[9px] font-medium text-gray-500 uppercase"><Rupee />{formatCurrency(item.price)} / unit</span>
+                             <span className="text-lg font-bold text-brand-yellow"><Rupee />{formatCurrency(item.price * item.qty)}</span>
                           </div>
                           <div className="flex items-center h-8 overflow-hidden border rounded-lg bg-brand-dark border-white/10">
                               <button onClick={() => updateQty(item.id, -1)} className="px-3 text-gray-400 transition-colors hover:text-white"><Minus size={12} /></button>
@@ -148,7 +150,7 @@ const Cart = () => {
                   <div className="mb-6 space-y-3 text-[10px] font-medium tracking-widest uppercase">
                     <div className="flex justify-between text-gray-400">
                       <span>Item Total</span>
-                      <span className="text-white">₹ {formatCurrency(total)}</span>
+                      <span className="text-white"><Rupee />{formatCurrency(total)}</span>
                     </div>
 
                     <div className="flex justify-between text-gray-400">
@@ -161,7 +163,7 @@ const Cart = () => {
                   <div className="p-4 mb-6 border bg-black/40 rounded-2xl border-white/5">
                     <span className="text-[9px] font-semibold text-gray-500 uppercase tracking-widest block mb-1">To Pay</span>
                     <div className="flex items-center text-3xl italic font-bold tracking-tighter uppercase text-brand-yellow">
-                        <span className="mr-2 text-lg not-italic font-medium">₹</span>
+                        <span className="mr-2 text-lg not-italic font-medium"><Rupee /></span>
                         <span>{formatCurrency(total)}</span>
                     </div>
                   </div>

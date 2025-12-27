@@ -1,11 +1,12 @@
 import React, { useState, useMemo } from 'react';
-import { motion } from 'framer-motion';
-import { Plus, Minus, ShoppingBag, Info } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Plus, Minus, ShoppingBag, ChevronDown, Info } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 
 const ProductCard = ({ product }) => {
   const { cart, addToCart, updateQty, removeFromCart } = useCart();
   const [selectedVariantIndex, setSelectedVariantIndex] = useState(0);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   // --- 1. PRE-PROCESS VARIANTS ---
   const allVariants = useMemo(() => {
@@ -34,15 +35,12 @@ const ProductCard = ({ product }) => {
 
   const currentVariant = allVariants[selectedVariantIndex] || allVariants[0];
 
-  // --- HELPER: FORMAT WEIGHT/UNIT (Handles pc/pcs specifically) ---
   const formatUnit = (val, unit) => {
     const u = (unit || '').toLowerCase();
-    // No space for pc/pcs, space for gms/kg/ml
     if (u === 'pc' || u === 'pcs') return `${val}${u}`;
     return `${val} ${u}`;
   };
 
-  // --- 2. LOGIC UPDATES ---
   const isVariantSoldOut = Number(currentVariant.stock) <= 0 || currentVariant.active === false;
   const isAvailable = product.isAvailable !== false && !isVariantSoldOut;
 
@@ -50,7 +48,8 @@ const ProductCard = ({ product }) => {
   const cartItem = cart.find((item) => item.id === cartUniqueId);
   const qty = cartItem ? cartItem.qty : 0;
 
-  // --- 3. HANDLERS ---
+  const RupeeSymbol = () => <span style={{ fontFamily: 'sans-serif', marginRight: '1px' }}>₹</span>;
+
   const handleAdd = () => {
     if (!isAvailable) return;
     addToCart({
@@ -78,26 +77,21 @@ const ProductCard = ({ product }) => {
   };
 
   return (
-    <div className="relative flex flex-col h-full overflow-hidden border shadow-lg bg-brand-surface rounded-[2rem] border-white/5 group">
+    <div className="relative flex flex-col w-full sm:max-w-[280px] h-[320px] sm:h-[400px] overflow-hidden border shadow-xl bg-brand-surface rounded-[2rem] border-white/5 group mx-auto transition-all">
       
       {/* IMAGE AREA */}
-      <div className="relative w-full p-2 overflow-hidden aspect-square bg-brand-dark/50">
+      <div className="relative w-full p-2 overflow-hidden aspect-square sm:aspect-video bg-brand-dark/50">
         <img 
           src={product.imageUrl || "https://placehold.co/400x400?text=No+Image"} 
           alt={product.name} 
-          className={`w-full h-full object-cover rounded-2xl transition-transform duration-500 group-hover:scale-105 ${!isAvailable ? 'grayscale opacity-40' : ''}`}
+          className={`w-full h-full object-cover rounded-2xl transition-transform duration-700 group-hover:scale-105 ${!isAvailable ? 'grayscale opacity-40' : ''}`}
         />
-        <div className="absolute top-3 left-3">
-          <span className="px-2 py-0.5 text-[9px] font-medium text-white uppercase tracking-widest bg-black/60 backdrop-blur-sm rounded-full border border-white/10 shadow-sm">
-            {product.category}
-          </span>
-        </div>
-        <div className="absolute p-1 rounded-lg shadow-sm top-3 right-3 bg-white/90 backdrop-blur-sm">
+        <div className="absolute top-4 left-4">
            <VegIndicator type={product.type} />
         </div>
         {isVariantSoldOut && (
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none bg-black/10">
-                <span className="bg-red-600 text-white text-[9px] font-semibold px-2.5 py-1 rounded-full uppercase tracking-tighter shadow-xl rotate-[-5deg]">
+            <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
+                <span className="bg-red-600 text-white text-[10px] sm:text-xs font-normal px-4 py-1.5 rounded-full uppercase tracking-widest shadow-2xl rotate-[-5deg]">
                     Sold Out
                 </span>
             </div>
@@ -105,102 +99,108 @@ const ProductCard = ({ product }) => {
       </div>
 
       {/* DETAILS AREA */}
-      <div className="flex flex-col flex-1 p-4 pt-2">
-        <div className="h-6 mb-1">
-          <h3 className="text-sm italic font-semibold tracking-tight text-white uppercase line-clamp-1">
-            {product.name}
-          </h3>
-        </div>
+      <div className="flex flex-col flex-1 p-4 pt-2 sm:p-5 sm:pt-3">
+        <h3 className="mb-1 text-sm font-normal tracking-tight text-white uppercase sm:text-lg line-clamp-1 sm:mb-1">
+          {product.name}
+        </h3>
 
-        <div className="h-4 mb-2">
-            {allVariants.length > 1 && (
-                <p className="flex items-center gap-1 text-[7px] text-brand-orange/80 uppercase font-medium">
-                    <Info size={8} /> Choose pc/size to add more
-                </p>
-            )}
-        </div>
+        {/* VARIANT INFO HINT (Only for products with > 1 variants) */}
+        {allVariants.length > 1 && (
+          <div className="flex items-center gap-1 mb-2 opacity-80 animate-pulse">
+            <Info size={10} className="text-brand-orange" />
+            <span className="text-[8px] sm:text-[9px] text-gray-400 uppercase font-normal tracking-tighter">
+              Tap below to change variant
+            </span>
+          </div>
+        )}
 
-        {/* VARIANT SELECTOR SECTION */}
-        <div className="min-h-[52px] mb-3">
-            {allVariants.length > 1 ? (
-            <div className="flex flex-wrap gap-1.5">
-                {allVariants.map((variant, idx) => {
-                   const variantSoldOut = Number(variant.stock) <= 0 || variant.active === false;
-                   return (
-                    <button
-                        key={`${variant.weight}-${variant.unit}`}
-                        onClick={() => setSelectedVariantIndex(idx)}
-                        className={`relative flex flex-col items-center justify-center min-w-[50px] px-2 py-1 rounded-lg border transition-all ${
-                        selectedVariantIndex === idx
-                            ? 'bg-brand-orange text-white border-brand-orange shadow-md'
-                            : variantSoldOut 
-                                ? 'bg-gray-800/40 text-gray-600 border-gray-700' 
-                                : 'bg-brand-dark/40 text-gray-400 border-white/5 hover:text-white'
-                        }`}
-                    >
-                        {/* Displays as 5pc or 10pcs */}
-                        <span className="text-[9px] font-medium uppercase">
-                          {formatUnit(variant.weight, variant.unit)}
-                        </span>
-                        <span className={`text-[7px] font-bold ${selectedVariantIndex === idx ? 'text-white/80' : variantSoldOut ? 'text-red-500/50' : 'text-brand-orange/60'}`}>
-                            {variantSoldOut ? 'Out' : `${variant.stock} left`}
-                        </span>
-                    </button>
-                   );
-                })}
-            </div>
-            ) : (
-                <div className="flex flex-col">
-                    <span className="text-[10px] font-medium text-gray-500 uppercase tracking-widest">
-                       {formatUnit(currentVariant.weight, currentVariant.unit)} Pack
-                    </span>
-                    <span className="text-[8px] font-bold text-brand-orange/60 uppercase">In Stock: {currentVariant.stock}</span>
-                </div>
-            )}
-        </div>
-
-        {/* Price Section */}
-        <div className="flex items-end justify-between mt-auto mb-3">
-            <div className="flex flex-col">
-                <span className="text-[9px] font-medium text-brand-orange uppercase tracking-widest">
-                   {formatUnit(currentVariant.weight, currentVariant.unit)}
+        {/* MODERN DROPDOWN SELECTOR */}
+        <div className="relative mb-3">
+          <button 
+            onClick={() => allVariants.length > 1 && setIsDropdownOpen(!isDropdownOpen)}
+            className={`w-full flex items-center justify-between px-3 py-1.5 rounded-xl bg-brand-dark/60 border border-white/10 text-xs sm:text-sm transition-all ${allVariants.length > 1 ? 'hover:border-brand-orange/50 active:scale-95' : 'cursor-default'}`}
+          >
+            <div className="flex items-center gap-2 overflow-hidden">
+              <span className="font-normal text-gray-300 truncate">
+                {formatUnit(currentVariant.weight, currentVariant.unit)}
+              </span>
+              {allVariants.length > 1 && (
+                <span className="text-brand-orange text-[9px] font-normal shrink-0 bg-brand-orange/10 px-1.5 py-0.5 rounded">
+                  {allVariants.length} variants
                 </span>
-                <span className="text-lg italic font-semibold text-white">₹{currentVariant.price}</span>
+              )}
+            </div>
+            {allVariants.length > 1 && <ChevronDown size={14} className={`text-brand-orange transition-transform duration-300 ${isDropdownOpen ? 'rotate-180' : ''}`} />}
+          </button>
+
+          <AnimatePresence>
+            {isDropdownOpen && (
+              <>
+                <div className="fixed inset-0 z-[70]" onClick={() => setIsDropdownOpen(false)} />
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                  className="absolute bottom-full left-0 w-full mb-2 z-[80] bg-brand-surface border border-brand-orange/20 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden"
+                  style={{ overflowY: 'visible' }}
+                >
+                  {allVariants.map((variant, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => { setSelectedVariantIndex(idx); setIsDropdownOpen(false); }}
+                      className={`w-full px-4 py-1.5 text-left text-[11px] sm:text-[13px] border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors flex justify-between items-center ${selectedVariantIndex === idx ? 'text-brand-orange bg-brand-orange/10' : 'text-gray-400'}`}
+                    >
+                      <span className="font-normal">{formatUnit(variant.weight, variant.unit)}</span>
+                      <span className="font-normal text-white">
+                        <RupeeSymbol />{variant.price}
+                      </span>
+                    </button>
+                  ))}
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Price & Stock Row */}
+        <div className="flex items-center justify-between mt-auto mb-3">
+            <div className="flex flex-col">
+              <span className="text-lg italic font-normal leading-none text-white sm:text-2xl">
+                <RupeeSymbol />{currentVariant.price}
+              </span>
             </div>
             {isAvailable && currentVariant.stock <= 5 && (
-                 <span className="text-[8px] font-semibold text-red-500 animate-pulse uppercase">
-                    Low Stock
-                 </span>
+                <span className="text-[10px] font-normal text-red-500 animate-pulse uppercase bg-red-500/10 px-2 py-1 rounded">Low Stock</span>
             )}
         </div>
 
         {/* Action Button */}
-        <div className="h-10">
+        <div className="h-10 sm:h-12">
           {qty === 0 ? (
             <motion.button
               whileTap={{ scale: 0.95 }}
               onClick={handleAdd}
               disabled={!isAvailable}
-              className={`w-full h-full rounded-xl font-semibold text-[11px] uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${
+              className={`w-full h-full rounded-xl font-normal text-xs sm:text-sm uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${
                 isAvailable 
-                  ? 'bg-brand-orange text-white shadow-lg shadow-brand-orange/10' 
-                  : 'bg-white/5 border border-white/10 text-gray-600 cursor-not-allowed'
+                  ? 'bg-brand-orange text-white shadow-[0_10px_20px_rgba(255,69,0,0.2)] hover:brightness-110' 
+                  : 'bg-white/5 text-gray-600 border border-white/5 cursor-not-allowed'
               }`}
             >
-              {isAvailable ? <>Add <ShoppingBag size={13} /></> : 'Out of Stock'}
+              {isAvailable ? <>Add <ShoppingBag size={16} /></> : 'Unavailable'}
             </motion.button>
           ) : (
-            <div className="flex items-center justify-between w-full h-full overflow-hidden border shadow-inner rounded-xl bg-brand-dark border-brand-orange/30">
-              <button onClick={handleDecrement} className="flex items-center justify-center w-10 h-full text-brand-orange hover:bg-brand-orange/10">
-                <Minus size={16} strokeWidth={2} />
+            <div className="flex items-center justify-between w-full h-full overflow-hidden border-2 rounded-xl bg-brand-dark border-brand-orange/30">
+              <button onClick={handleDecrement} className="flex items-center justify-center w-12 h-full transition-colors sm:w-16 text-brand-orange hover:bg-brand-orange/10">
+                <Minus size={20} strokeWidth={2} />
               </button>
-              <span className="text-sm italic font-semibold text-white">{qty}</span>
+              <span className="text-base font-normal text-white sm:text-xl">{qty}</span>
               <button 
                 onClick={handleIncrement} 
                 disabled={qty >= currentVariant.stock}
-                className={`flex items-center justify-center w-10 h-full ${qty >= currentVariant.stock ? 'text-gray-700' : 'text-brand-orange hover:bg-brand-orange/10'}`}
+                className={`flex items-center justify-center w-12 sm:w-16 h-full transition-colors ${qty >= currentVariant.stock ? 'text-gray-700' : 'text-brand-orange hover:bg-brand-orange/10'}`}
               >
-                <Plus size={16} strokeWidth={2} />
+                <Plus size={20} strokeWidth={2} />
               </button>
             </div>
           )}
@@ -214,8 +214,14 @@ const VegIndicator = ({ type }) => {
   const isVeg = type && type.toLowerCase() === 'veg';
   const color = isVeg ? '#22c55e' : '#ef4444';
   return (
-    <div className="flex items-center justify-center w-3 h-3 border-2 rounded-sm" style={{ borderColor: color }}>
-      <div className="w-1 h-1 rounded-full" style={{ backgroundColor: color }}></div>
+    <div 
+      className="flex items-center justify-center w-4 h-4 p-0.5 border-2 rounded bg-white/90" 
+      style={{ borderColor: color }}
+    >
+      <div 
+        className="w-full h-full rounded-full" 
+        style={{ backgroundColor: color }}
+      ></div>
     </div>
   );
 };

@@ -22,8 +22,7 @@ import {
   User as UserIcon,
   MapPin,
   Phone,
-  ShieldCheck,
-  IndianRupee
+  ShieldCheck
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -44,6 +43,9 @@ const Profile = () => {
   const [newAddress, setNewAddress] = useState({
     type: 'Home', line1: '', city: '', state: '', zip: '', phone: ''
   });
+
+  // Helper for consistent standard Rupee symbol
+  const Rupee = () => <span style={{ fontFamily: 'sans-serif', marginRight: '1px' }}>₹</span>;
 
   useEffect(() => {
     if (location.state?.openAddressModal) {
@@ -132,7 +134,6 @@ const Profile = () => {
 
   const handleAddAddress = async (e) => {
     e.preventDefault();
-    // UPDATED VALIDATION: Added newAddress.phone requirement
     if (!newAddress.line1 || !newAddress.city || !newAddress.zip || !newAddress.phone) {
       return toast.error("Please fill all required fields including phone");
     }
@@ -174,7 +175,7 @@ const Profile = () => {
   };
 
   return (
-    <div className="flex flex-col items-center min-h-screen p-4 pt-20 pb-24 overflow-x-hidden font-sans bg-brand-dark">
+    <div className="flex flex-col items-center min-h-screen p-4 pt-20 pb-24 overflow-x-hidden font-sans text-left bg-brand-dark">
       <div className="fixed top-0 right-0 w-64 h-64 rounded-full bg-brand-orange/10 blur-3xl -z-10"></div>
       <div className="fixed bottom-0 left-0 w-64 h-64 rounded-full bg-brand-red/10 blur-3xl -z-10"></div>
 
@@ -213,9 +214,9 @@ const Profile = () => {
            </div>
            <div className="flex flex-col items-center justify-center p-5 text-center border bg-brand-surface/50 backdrop-blur-md rounded-[24px] border-white/5">
               <div className="p-2.5 mb-2 rounded-full bg-brand-yellow/10 text-brand-yellow">
-                 <IndianRupee size={22} />
+                 <ShieldCheck size={22} />
               </div>
-              <p className="text-2xl font-black text-white">₹{stats.expense.toLocaleString()}</p>
+              <p className="text-2xl font-black text-white"><Rupee />{stats.expense.toLocaleString()}</p>
               <p className="text-[9px] text-gray-500 uppercase font-black tracking-widest">Total Spent</p>
            </div>
         </div>
@@ -225,7 +226,7 @@ const Profile = () => {
             <button 
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`flex-1 pb-4 text-xs font-black uppercase tracking-widest transition-all relative ${activeTab === tab ? 'text-brand-orange' : 'text-gray-500'}`}
+              className={`flex-1 pb-4 text-xs font-black uppercase tracking-widest transition-all relative ${activeTab === tab ? 'text-brand-orange' : 'text-gray-50'}`}
             >
               {tab === 'info' ? 'Personal Info' : 'Saved Addresses'}
               {activeTab === tab && (
@@ -294,7 +295,7 @@ const Profile = () => {
         )}
 
         {activeTab === 'address' && (
-          <div className="space-y-4 duration-500 animate-in fade-in slide-in-from-bottom-4">
+          <div className="space-y-4 text-left duration-500 animate-in fade-in slide-in-from-bottom-4">
             {profileData?.addresses && profileData.addresses.length > 0 ? (
                <div className="space-y-4">
                   {profileData.addresses.map((addr) => (
@@ -361,7 +362,6 @@ const Profile = () => {
                    </div>
                    <div className="grid grid-cols-2 gap-4">
                        <input placeholder="Pincode" type="number" className="p-4 text-sm font-bold text-white transition-all border outline-none rounded-2xl bg-brand-dark border-white/5 focus:border-brand-orange" value={newAddress.zip} onChange={e => setNewAddress({...newAddress, zip: e.target.value})} required />
-                       {/* UPDATED: Added required attribute */}
                        <input 
                          placeholder="Phone (Required)" 
                          type="tel" 

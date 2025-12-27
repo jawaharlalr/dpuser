@@ -52,6 +52,9 @@ const Checkout = () => {
     return new Intl.NumberFormat('en-IN').format(Math.round(amount));
   };
 
+  // Helper for the standard Rupee symbol style
+  const Rupee = () => <span style={{ fontFamily: 'sans-serif', marginRight: '1px' }}>₹</span>;
+
   useEffect(() => {
     if (!showSuccessModal && cart.length === 0) {
       navigate("/menu");
@@ -264,7 +267,7 @@ const Checkout = () => {
                             <p className="text-[10px] text-gray-400">{item.selectedWeight} • {item.qty} units</p>
                           </div>
                         </div>
-                        <p className="font-medium text-white">₹{formatCurrency(item.price * item.qty)}</p>
+                        <p className="font-medium text-white"><Rupee />{formatCurrency(item.price * item.qty)}</p>
                       </div>
                     ))}
                   </motion.div>
@@ -348,7 +351,7 @@ const Checkout = () => {
                       <div className="pt-3 mt-4 border-t border-white/5">
                         <div className="flex justify-between text-[8px] uppercase text-gray-400 mb-1.5">
                           <span>Progress</span>
-                          <span>₹{total}/₹{minAmt}</span>
+                          <span><Rupee />{total}/<Rupee />{minAmt}</span>
                         </div>
                         <div className="w-full h-1 overflow-hidden rounded-full bg-white/5">
                            <div className={`h-full transition-all ${isActive ? 'bg-brand-orange' : 'bg-gray-600'}`} style={{ width: `${Math.min((total/minAmt)*100, 100)}%` }} />
@@ -367,15 +370,15 @@ const Checkout = () => {
               <h3 className="pb-3 mb-5 text-lg italic font-medium text-white uppercase border-b border-white/5">Receipt</h3>
               
               <div className="mb-6 space-y-3 text-[10px] tracking-widest uppercase font-medium">
-                <div className="flex justify-between text-gray-400"><span>Subtotal</span><span className="text-gray-100">₹ {formatCurrency(total)}</span></div>
-                {discountPercent > 0 && <div className="flex justify-between font-medium tracking-tighter text-green-500"><span>Discount</span><span>- ₹ {formatCurrency(discountAmount)}</span></div>}
+                <div className="flex justify-between text-gray-400"><span>Subtotal</span><span className="text-gray-100"><Rupee /> {formatCurrency(total)}</span></div>
+                {discountPercent > 0 && <div className="flex justify-between font-medium tracking-tighter text-green-500"><span>Discount</span><span>- <Rupee /> {formatCurrency(discountAmount)}</span></div>}
                 <div className="flex justify-between text-gray-400"><span>Delivery</span><span className="text-green-500">FREE</span></div>
                 
-                {/* DYNAMIC NOTICE BOX: Hidden if Store Pickup is selected */}
+                {/* DYNAMIC NOTICE BOX */}
                 {deliveryType === "home" && !isMinOrderMet && (
                   <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} className="flex items-start gap-2 p-3 border border-brand-yellow/30 bg-brand-yellow/5 rounded-xl">
                     <AlertCircle size={14} className="text-brand-yellow shrink-0 mt-0.5" />
-                    <p className="text-[9px] text-brand-yellow leading-tight uppercase font-medium">Min ₹{deliveryConfig.minOrderAmount} required for Delivery. Change to Pickup or add items.</p>
+                    <p className="text-[9px] text-brand-yellow leading-tight uppercase font-medium">Min <Rupee />{deliveryConfig.minOrderAmount} required for Delivery. Change to Pickup or add items.</p>
                   </motion.div>
                 )}
               </div>
@@ -383,7 +386,7 @@ const Checkout = () => {
               <div className="p-5 mb-8 border bg-black/40 rounded-2xl border-white/5">
                 <p className="text-[9px] font-medium text-gray-500 uppercase tracking-widest mb-1">Final Total</p>
                 <div className="flex items-center text-3xl italic font-medium tracking-tighter text-brand-yellow">
-                    <span className="mr-2 text-xl not-italic font-light">₹</span>
+                    <span className="mr-2 text-xl not-italic font-light"><Rupee /></span>
                     <span>{formatCurrency(finalPayable)}</span>
                 </div>
               </div>

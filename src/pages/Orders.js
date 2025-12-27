@@ -32,6 +32,9 @@ const Orders = () => {
     return new Intl.NumberFormat('en-IN').format(Math.round(amount));
   };
 
+  // Helper for the standard Rupee symbol style
+  const Rupee = () => <span style={{ fontFamily: 'sans-serif', marginRight: '1px' }}>₹</span>;
+
   useEffect(() => {
     if (!user) return;
     setLoading(true);
@@ -137,8 +140,6 @@ const Orders = () => {
                 const totalQtyValue = order.items?.reduce((acc, item) => acc + (Number(item.qty) || 0), 0) || 0;
                 const statusLower = order.status?.toLowerCase();
                 const isFinalState = statusLower === 'delivered' || statusLower === 'cancelled';
-                
-                // Logic for Paid Amount Color
                 const isPaid = order.paymentStatus === 'Paid' || order.paymentMethod === 'Online';
 
                 return (
@@ -168,9 +169,8 @@ const Orders = () => {
                       <div className="flex items-center justify-between gap-8 md:justify-end">
                           <div className="text-left uppercase md:text-right">
                              <p className="text-[9px] text-gray-500 mb-0.5">{order.paymentMethod}</p>
-                             {/* UPDATED: Dynamic Green color for Paid orders */}
                              <p className={`text-lg font-medium tracking-tighter ${isPaid ? 'text-green-400' : 'text-brand-yellow'}`}>
-                               ₹ {formatCurrency(order.totalAmount)}
+                               <Rupee />{formatCurrency(order.totalAmount)}
                              </p>
                           </div>
                           <ChevronDown size={18} className={`text-gray-400 transition-transform duration-300 ${expandedOrderId === order.id ? 'rotate-180 text-brand-orange' : ''}`} />
@@ -195,7 +195,7 @@ const Orders = () => {
                                {order.discountAmount > 0 && (
                                  <div className="px-4 py-2 border rounded-xl bg-green-500/5 border-green-500/20 min-w-[100px]">
                                     <p className="text-[8px] text-green-600 uppercase mb-1">Savings</p>
-                                    <p className="text-xs font-medium text-green-400">₹ {formatCurrency(order.discountAmount)}</p>
+                                    <p className="text-xs font-medium text-green-400"><Rupee /> {formatCurrency(order.discountAmount)}</p>
                                  </div>
                                )}
                             </div>
@@ -237,9 +237,9 @@ const Orders = () => {
                                      </div>
                                      <div className="flex-1 min-w-0 text-left uppercase">
                                         <p className="text-xs font-medium text-gray-100 truncate">{item.name}</p>
-                                        <p className="text-[9px] text-gray-500 mt-0.5">{item.selectedWeight} • ₹{item.price} <span className="text-brand-orange">x {item.qty}</span></p>
+                                        <p className="text-[9px] text-gray-500 mt-0.5">{item.selectedWeight} • <Rupee />{item.price} <span className="text-brand-orange">x {item.qty}</span></p>
                                      </div>
-                                     <div className="text-xs font-medium tracking-tighter text-white">₹ {formatCurrency(item.price * item.qty)}</div>
+                                     <div className="text-xs font-medium tracking-tighter text-white"><Rupee /> {formatCurrency(item.price * item.qty)}</div>
                                 </div>
                               ))}
                             </div>
@@ -261,13 +261,12 @@ const Orders = () => {
                                     </div>
                                 </div>
                                 <div className="space-y-1.5 text-right text-[10px] uppercase font-medium tracking-widest">
-                                    <div className="flex justify-between text-gray-500 md:justify-end md:gap-12"><span>Subtotal</span><span className="text-gray-100">₹ {formatCurrency(order.subtotal || order.totalAmount)}</span></div>
-                                    {order.discountAmount > 0 && <div className="flex justify-between text-green-500 md:justify-end md:gap-12"><span>Coupon Applied</span><span>- ₹ {formatCurrency(order.discountAmount)}</span></div>}
+                                    <div className="flex justify-between text-gray-500 md:justify-end md:gap-12"><span>Subtotal</span><span className="text-gray-100"><Rupee /> {formatCurrency(order.subtotal || order.totalAmount)}</span></div>
+                                    {order.discountAmount > 0 && <div className="flex justify-between text-green-500 md:justify-end md:gap-12"><span>Coupon Applied</span><span>- <Rupee /> {formatCurrency(order.discountAmount)}</span></div>}
                                     <div className="flex justify-between pt-2 mt-2 text-white border-t md:justify-end md:gap-12 border-white/5">
                                       <span className="font-bold">Paid Total</span>
-                                      {/* UPDATED: Dynamic Green color inside expanded receipt too */}
                                       <span className={`font-bold text-sm ${isPaid ? 'text-green-400' : 'text-brand-yellow'}`}>
-                                        ₹ {formatCurrency(order.totalAmount)}
+                                        <Rupee /> {formatCurrency(order.totalAmount)}
                                       </span>
                                     </div>
                                 </div>

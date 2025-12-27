@@ -3,8 +3,9 @@ import { useSearchParams } from "react-router-dom";
 import { db } from "../firebase";
 import { collection, orderBy, query, doc, getDoc, onSnapshot } from "firebase/firestore";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Sparkles, AlertCircle, ChevronUp } from "lucide-react"; // Added ChevronUp
+import { Sparkles, AlertCircle, ChevronUp } from "lucide-react"; 
 import ProductCard from "../components/ProductCard";
+import SearchBar from "../components/SearchBar"; // LINKED SEARCHBAR
 
 // --- FALLING ANIMATION COMPONENT ---
 const FallingEmojis = ({ emoji }) => {
@@ -36,24 +37,18 @@ const Menu = () => {
   const [products, setProducts] = useState([]);
   const [dbCategories, setDbCategories] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showScrollTop, setShowScrollTop] = useState(false); // State for scroll button
+  const [showScrollTop, setShowScrollTop] = useState(false);
 
   const currentCategory = searchParams.get("category") || "All";
   const currentSearch = searchParams.get("search") || "";
 
-  // --- 1. SCROLL TO TOP ON FILTER CHANGE ---
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [currentCategory, currentSearch]);
 
-  // --- 2. SHOW/HIDE SCROLL BUTTON LOGIC ---
   useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > 400) {
-        setShowScrollTop(true);
-      } else {
-        setShowScrollTop(false);
-      }
+      setShowScrollTop(window.scrollY > 400);
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
@@ -137,7 +132,6 @@ const Menu = () => {
     });
   }, [products, currentCategory, currentSearch]);
 
-  // Handler for the button
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -146,7 +140,6 @@ const Menu = () => {
     <div className="relative min-h-screen pb-24 overflow-x-hidden bg-brand-dark">
       {festivalEmoji && <FallingEmojis emoji={festivalEmoji} />}
 
-      {/* --- SCROLL TO TOP BUTTON --- */}
       <AnimatePresence>
         {showScrollTop && (
           <motion.button
@@ -172,16 +165,12 @@ const Menu = () => {
             <Sparkles size={24} className="text-brand-yellow" fill="currentColor" />
           </div>
 
-          <div className="relative w-full md:max-w-md group">
-            <Search className="absolute w-5 h-5 text-gray-500 left-4 top-3.5 group-focus-within:text-brand-orange transition-colors" />
-            <input 
-              type="text" 
-              placeholder="Search sweets & snacks..." 
-              value={currentSearch}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              className="w-full py-3.5 pl-12 pr-4 text-sm font-normal text-white placeholder-gray-600 transition-all border shadow-2xl bg-brand-surface border-white/5 rounded-2xl focus:outline-none focus:border-brand-orange/50 focus:bg-brand-dark"
-            />
-          </div>
+          {/* LINKED SEARCHBAR COMPONENT */}
+          <SearchBar 
+            value={currentSearch} 
+            onChange={handleSearchChange} 
+            placeholder="Search sweets & snacks..." 
+          />
         </div>
 
         {/* CATEGORY TABS */}
