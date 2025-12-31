@@ -34,129 +34,51 @@ export const getFestivalConfig = () => {
 
   // --- NEW YEAR ---
   if ((month === 12 && date >= 31) || (month === 1 && date === 2))
-    return { 
-      name: "New Year", emoji: "✨", userBadge: "🥳", 
-      deadline: `${year + (month === 12 ? 1 : 0)}-01-01T23:59:59`,
-      msg: "Happy New Year!", sub: "Start your year with crunchy treats.", 
-      theme: "from-purple-600/30 to-blue-600/30",
-      animation: "float", count: 30 
-    };
+    return { emoji: "✨", animation: "float", count: 30 };
 
   // --- PONGAL ---
   if (isDateRange(1, 13, 17))
-    return { 
-      name: "Pongal", emoji: "🍯", userBadge: "🌾", 
-      deadline: `${year}-01-17T23:59:59`,
-      msg: "Happy Pongal!", sub: "Let the pot boil with happiness.", 
-      theme: "from-orange-500/30 to-yellow-500/30",
-      animation: "float", count: 25 
-    };
+    return { emoji: "🍯", animation: "float", count: 25 };
 
   // --- REPUBLIC DAY ---
-if (month === 1 && date === 26)
-  return { 
-    name: "Republic Day", 
-    emoji: "\uD83C\uDDEE\uD83C\uDDF3", // Unicode for 🇮🇳
-    userBadge: "🎖️", 
-    deadline: `${year}-01-26T23:59:59`,
-    msg: "Happy Republic Day!", 
-    sub: "Celebrating the spirit of India.", 
-    theme: "from-[#FF9933]/20 via-white/10 to-[#138808]/20", // Actual Saffron and Green hex
-    animation: "float", 
-    count: 25,
-    specialText: "PROUDLY INDIAN"
-  };
+  if (month === 1 && date === 26)
+    return { emoji: "🇮🇳", animation: "float", count: 25 };
 
   // --- VALENTINE'S WEEK ---
   if (isDateRange(2, 7, 14))
-    return { 
-      name: "Valentine", emoji: "💕💝", userBadge: "💌", 
-      deadline: `${year}-02-14T23:59:59`,
-      msg: "Season of Love! 💓", sub: "Share the sweetness with loved ones.", 
-      theme: "from-pink-600/30 to-red-600/20",
-      animation: "float", count: 20 
-    };
+    return { emoji: "💕", animation: "float", count: 20 };
 
   // --- HOLI ---
   if (todayStr === currentVar.holi)
-    return { 
-      name: "Holi", emoji: "🎨", userBadge: "🎭", 
-      deadline: `${year}-${currentVar.holi}T23:59:59`,
-      msg: "Happy Holi!", sub: "A festival of vibrant colors and snacks.", 
-      theme: "from-pink-500/30 via-yellow-500/20 to-blue-500/30",
-      animation: "pop", count: 40 
-    };
+    return { emoji: "🎨", animation: "pop", count: 40 };
 
   // --- TAMIL NEW YEAR (PUTHANDU) ---
   if (month === 4 && date === 14)
-    return { 
-      name: "Puthandu", emoji: "🥭", userBadge: "🪔", 
-      deadline: `${year}-04-14T23:59:59`,
-      msg: "Iniya Puthandu Vazhthukal!", sub: "Sweetness for a new beginning.", 
-      theme: "from-yellow-500/30 to-green-500/30",
-      animation: "float", count: 20 
-    };
+    return { emoji: "🥭", animation: "float", count: 20 };
 
   // --- EID ---
   if (todayStr === currentVar.eid)
-    return { 
-      name: "Eid", emoji: "🌙", userBadge: "🕌", 
-      deadline: `${year}-${currentVar.eid}T23:59:59`,
-      msg: "Eid Mubarak!", sub: "Feast together with special sweets.", 
-      theme: "from-green-700/30 to-emerald-500/20",
-      animation: "float", count: 20 
-    };
+    return { emoji: "🌙", animation: "float", count: 20 };
 
   // --- INDEPENDENCE DAY ---
   if (month === 8 && date === 15)
-    return { 
-      name: "Independence Day", emoji: "🇮🇳", userBadge: "🎗️", 
-      deadline: `${year}-08-15T23:59:59`,
-      msg: "Happy Independence Day!", sub: "Taste the freedom of tradition.", 
-      theme: "from-orange-600/20 via-white/5 to-green-600/20",
-      animation: "float", count: 20,
-      specialText: "79 YEARS OF FREEDOM"
-    };
+    return { emoji: "🇮🇳", animation: "float", count: 20 };
 
   // --- VINAYAKA CHATURTHI ---
   if (todayStr === currentVar.vinayakaChaturthi)
-    return { 
-      name: "Vinayaka Chaturthi", emoji: "🐘", userBadge: "🪷", 
-      deadline: `${year}-${currentVar.vinayakaChaturthi}T23:59:59`,
-      msg: "Happy Vinayaka Chaturthi!", sub: "Ganesha's blessings to you.", 
-      theme: "from-orange-600/30 to-yellow-500/30",
-      animation: "float", count: 15 
-    };
+    return { emoji: "🐘", animation: "float", count: 15 };
 
   // --- DIWALI ---
   if (todayStr === currentVar.diwali)
-    return { 
-      name: "Diwali", emoji: "💥", userBadge: "🪔", 
-      deadline: `${year}-${currentVar.diwali}T23:59:59`,
-      msg: "Happy Diwali!", sub: "Light up your day with crunchy snacks.", 
-      theme: "from-yellow-600/40 via-red-600/20 to-brand-dark",
-      animation: "pop", count: 35 
-    };
+    return { emoji: "💥", animation: "pop", count: 35 };
 
   // --- KARTHIGAI DEEPAM ---
   if (todayStr === currentVar.karthigai)
-    return { 
-      name: "Karthigai Deepam", emoji: "🕯️", userBadge: "🔥", 
-      deadline: `${year}-${currentVar.karthigai}T23:59:59`,
-      msg: "Happy Karthigai Deepam!", sub: "Let the light of sweets shine.", 
-      theme: "from-red-700/30 to-orange-500/20",
-      animation: "float", count: 25 
-    };
+    return { emoji: "🕯️", animation: "float", count: 25 };
 
   // --- CHRISTMAS ---
   if (isDateRange(12, 20, 25))
-    return { 
-      name: "Christmas", emoji: "❄️", userBadge: "🎅", 
-      deadline: `${year}-12-25T23:59:59`,
-      msg: "Merry Christmas!", sub: "Wishing you a sweet holiday.", 
-      theme: "from-red-600/30 to-green-600/30",
-      animation: "snow", count: 40 
-    };
+    return { emoji: "❄️", animation: "snow", count: 40 };
 
   return null;
 };

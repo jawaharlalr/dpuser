@@ -26,15 +26,14 @@ import {
   ChevronRight,
   Clock,
   ShoppingBag,
-  ArrowRight
+  ArrowRight,
+  Zap
 } from "lucide-react";
 import { getFestivalConfig } from "../utils/festivalLogic";
 import { Helmet } from "react-helmet-async";
 
-// Standard Rupee Symbol Component
 const Rupee = () => <span style={{ fontFamily: 'sans-serif', marginRight: '1px' }}>₹</span>;
 
-// --- 1. SKELETON LOADER COMPONENT ---
 const HomeSkeleton = () => (
   <div className="px-4 pt-6 mx-auto space-y-8 max-w-7xl animate-pulse bg-brand-dark">
     <div className="flex items-center justify-between">
@@ -48,7 +47,6 @@ const HomeSkeleton = () => (
   </div>
 );
 
-// --- 2. OPTIMIZED FALLING ANIMATION ---
 const FallingEmojis = React.memo(({ emoji }) => {
   const [pageHeight, setPageHeight] = useState(window.innerHeight);
   const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -127,6 +125,7 @@ const Home = () => {
 
   const [appSettings, setAppSettings] = useState({
     banners: [],
+    promotions: [], 
     categoryOrder: [],
     bestSellers: []
   });
@@ -136,12 +135,11 @@ const Home = () => {
     return Number(localStorage.getItem("selectedAddressIndex")) || 0;
   });
 
-  // --- SMART GREETING ---
   const greeting = useMemo(() => {
     const hour = new Date().getHours();
-    if (hour < 12) return { text: "Good Morning", sub: "Start your day with something sweet!", icon: "☀️" };
-    if (hour < 17) return { text: "Good Afternoon", sub: "Perfect time for a crunchy snack!", icon: "🌤️" };
-    return { text: "Good Evening", sub: "Fulfill your evening cravings!", icon: "🌙" };
+    if (hour < 12) return { text: "Good Morning", sub: "Sweet start to your day!", icon: "☀️" };
+    if (hour < 17) return { text: "Good Afternoon", sub: "Time for a snack break!", icon: "🌤️" };
+    return { text: "Good Evening", sub: "Satisfy your cravings!", icon: "🌙" };
   }, []);
 
   const userName = user?.displayName || userProfile?.name || "Foodie";
@@ -150,7 +148,6 @@ const Home = () => {
 
   const festivalConfig = useMemo(() => getFestivalConfig(), []);
 
-  // Safe Category Sorting logic restored
   const sortedCategories = useMemo(() => {
     const order = appSettings.categoryOrder || [];
     return [...dbCategories].sort((a, b) => {
@@ -168,7 +165,6 @@ const Home = () => {
     navigate(path);
   }, [navigate]);
 
-  // Persist Address & Fetch Recent
   useEffect(() => {
     localStorage.setItem("selectedAddressIndex", selectedAddressIndex);
     if (selectedAddressIndex >= addresses.length && addresses.length > 0) setSelectedAddressIndex(0);
@@ -184,7 +180,6 @@ const Home = () => {
     }
   }, [selectedAddressIndex, addresses.length]);
 
-  // Split Listeners
   useEffect(() => {
     const unsubSettings = onSnapshot(doc(db, "app_settings", "home_screen"), async (snap) => {
       if (!snap.exists()) return;
@@ -206,7 +201,6 @@ const Home = () => {
     return () => { unsubSettings(); unsubCats(); };
   }, []);
 
-  // Banner Autoplay fixed dependencies
   useEffect(() => {
     if (appSettings.banners.length <= 1) return;
     const duration = (appSettings.banners[activeBanner]?.duration || 5) * 1000;
@@ -217,9 +211,11 @@ const Home = () => {
   }, [activeBanner, appSettings.banners]);
 
   useEffect(() => {
-    if (!festivalConfig?.deadline) return;
+    const promo = appSettings.promotions?.[0];
+    if (!promo?.deadline) return;
+
     const timer = setInterval(() => {
-      const diff = +new Date(festivalConfig.deadline) - +new Date();
+      const diff = +new Date(promo.deadline) - +new Date();
       if (diff > 0) {
         setTimeLeft({
           days: Math.floor(diff / (1000 * 60 * 60 * 24)),
@@ -230,7 +226,7 @@ const Home = () => {
       } else clearInterval(timer);
     }, 1000);
     return () => clearInterval(timer);
-  }, [festivalConfig]);
+  }, [appSettings.promotions]);
 
   if (user && !userProfile && loading) return <HomeSkeleton />;
   if (loading) return <HomeSkeleton />;
@@ -288,38 +284,65 @@ const Home = () => {
           </section>
         )}
 
-        {/* --- FESTIVAL CARD --- */}
-        {festivalConfig && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} onClick={() => navigateWithScroll("/menu")} className={`p-5 rounded-[24px] bg-gradient-to-br ${festivalConfig.theme} border border-white/10 shadow-2xl relative overflow-hidden cursor-pointer group`}>
-            <div className="relative z-10 flex items-center justify-between gap-4">
-              <div className="flex-1 space-y-3">
-                <span className="px-2 py-0.5 rounded-full bg-white/10 text-[8px] font-normal uppercase tracking-[0.2em] backdrop-blur-md border border-white/10 flex items-center w-fit gap-1">
-                  <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" /> Festive Active
-                </span>
-                <div className="space-y-0.5">
-                  <h2 className="text-lg font-normal tracking-tighter uppercase sm:text-2xl">{festivalConfig.msg}</h2>
-                  <p className="text-[10px] text-white/80 line-clamp-1">{festivalConfig.sub}</p>
-                </div>
-                <div className="flex items-center gap-1.5">
-                    {[{ val: timeLeft.days, lab: 'D' }, { val: timeLeft.hours, lab: 'H' }, { val: timeLeft.mins, lab: 'M' }, { val: timeLeft.secs, lab: 'S' }].map((unit, idx) => (
-                      <React.Fragment key={idx}>
-                        <div className="flex flex-col items-center p-1.5 min-w-[36px] bg-black/40 rounded-lg border border-white/10">
-                          <span className="text-xs font-normal">{String(unit.val).padStart(2, '0')}</span>
-                          <span className="text-[6px] text-white/50 uppercase">{unit.lab}</span>
-                        </div>
-                        {idx < 3 && <span className="text-xs text-white/30">:</span>}
-                      </React.Fragment>
-                    ))}
+        {/* --- DYNAMIC PROMOTION / FESTIVE CARD (FULL IMG WIDTH) --- */}
+        {appSettings.promotions?.[0] && (
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            onClick={() => navigateWithScroll("/menu")} 
+            className="group relative w-full cursor-pointer overflow-hidden rounded-[2.5rem] border border-white/10 bg-brand-surface shadow-2xl transition-all aspect-video sm:aspect-[21/9] flex items-center"
+          >
+            {/* Background Image - Optimized to fill the wide card */}
+            {appSettings.promotions[0].imageUrl && (
+              <div 
+                className="absolute inset-0 z-0 transition-transform duration-1000 bg-center bg-no-repeat bg-cover group-hover:scale-105"
+                style={{ backgroundImage: `url(${appSettings.promotions[0].imageUrl})` }}
+              />
+            )}
+            
+            {/* Heavier Glassy gradient for guaranteed text visibility */}
+            <div className="absolute inset-0 z-10 bg-gradient-to-r from-black/95 via-black/60 to-transparent" />
+
+            <div className="relative z-20 flex flex-col justify-center w-full p-6 space-y-4 sm:p-12">
+              <div className="flex items-center gap-4">
+                <span className="text-4xl sm:text-5xl filter drop-shadow-2xl">{appSettings.promotions[0].emoji || "🎁"}</span>
+                <div className="space-y-1">
+                  <h2 className="text-2xl italic font-semibold leading-tight tracking-tighter text-white uppercase sm:text-4xl lg:text-5xl">
+                    {appSettings.promotions[0].text}
+                  </h2>
+                  <p className="text-xs font-medium tracking-[0.2em] uppercase text-brand-yellow sm:text-sm lg:text-base">
+                    {appSettings.promotions[0].subText}
+                  </p>
                 </div>
               </div>
-              <motion.div animate={showAnimations ? { scale: [1, 1.05, 1] } : {}} transition={{ repeat: Infinity, duration: 4 }} className="text-6xl sm:text-7xl drop-shadow-2xl">
-                {festivalConfig.emoji}
-              </motion.div>
+
+              {/* Countdown logic */}
+              {appSettings.promotions[0].deadline && (
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center gap-2 text-[9px] font-bold text-white/50 uppercase tracking-[0.2em]">
+                    <Clock size={12} className="text-brand-orange" />
+                    Offer Ends In
+                  </div>
+                  <div className="flex gap-2.5">
+                    {[{v:timeLeft.days,l:'D'}, {v:timeLeft.hours,l:'H'}, {v:timeLeft.mins,l:'M'}, {v:timeLeft.secs,l:'S'}].map((u, i) => (
+                      <div key={i} className="flex flex-col items-center bg-black/60 backdrop-blur-xl border border-white/10 px-4 py-2 rounded-2xl min-w-[50px]">
+                        <span className="text-base font-bold leading-none text-white">{String(u.v).padStart(2,'0')}</span>
+                        <span className="text-[8px] text-brand-orange uppercase font-black mt-1.5">{u.l}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Decorative Icon */}
+            <div className="absolute hidden right-10 bottom-10 opacity-30 rotate-12 sm:block">
+               <Zap size={120} fill="currentColor" className="text-white blur-[1px]" />
             </div>
           </motion.div>
         )}
 
-        {/* --- BANNER --- */}
+        {/* --- TOP BANNERS --- */}
         {appSettings.banners?.length > 0 && (
           <section className="relative w-full overflow-hidden rounded-[32px] bg-brand-surface shadow-2xl border border-white/5 aspect-[16/9] md:aspect-[21/9]">
             <AnimatePresence mode="wait">
@@ -332,7 +355,7 @@ const Home = () => {
 
         {/* --- CATEGORIES --- */}
         <section className="space-y-6">
-          <h3 className="pl-4 text-lg font-normal tracking-tight uppercase border-l-4 border-brand-orange">Explore Menu</h3>
+          <h3 className="pl-4 text-lg font-normal tracking-tight text-left uppercase border-l-4 border-brand-orange">Explore Menu</h3>
           <div className="grid grid-cols-4 sm:grid-cols-5 gap-y-8 gap-x-2">
             {sortedCategories.map((cat) => (
               <button key={cat.id} onClick={() => navigateWithScroll(`/menu?category=${cat.name}`)} className="flex flex-col items-center gap-2 group">
@@ -362,7 +385,7 @@ const Home = () => {
                   <div className="relative overflow-hidden aspect-square rounded-2xl bg-brand-dark">
                     <img src={item.imageUrl} loading="lazy" alt={item.name} className="object-cover w-full h-full" />
                   </div>
-                  <div className="px-1">
+                  <div className="px-1 text-left">
                     <p className="text-[9px] font-normal text-brand-orange uppercase mb-0.5">{item.category}</p>
                     <h4 className="text-xs font-normal text-white uppercase line-clamp-1">{item.name}</h4>
                   </div>
